@@ -1,1 +1,200 @@
-Hello World
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Página experimental para testar um chatbot de perguntas e respostas sobre documentos usando Cloudflare AI Search.">
+  <title>Assistente de documentos | Teste</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --surface: rgba(255,255,255,.88);
+      --surface-strong: #fff;
+      --text: #172033;
+      --muted: #5c667a;
+      --border: #e1e7f0;
+      --accent: #ea580c;
+      --accent-2: #f97316;
+      --accent-soft: #fff1e8;
+      --teal: #0f766e;
+      --shadow: 0 24px 70px rgba(22, 34, 59, .09);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 12% 4%, rgba(249,115,22,.11), transparent 35rem),
+        radial-gradient(ellipse at 92% 30%, rgba(20,184,166,.10), transparent 30rem),
+        var(--bg);
+      line-height: 1.55;
+    }
+    a { color: inherit; }
+    .shell { width: min(1080px, calc(100% - 36px)); margin-inline: auto; }
+    header { padding: 25px 0; }
+    .nav { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:750; letter-spacing:-.025em; }
+    .brand-mark {
+      display:grid; place-items:center; width:42px; height:42px; border-radius:14px;
+      color:#fff; background:linear-gradient(145deg,var(--accent),#c2410c);
+      box-shadow:0 8px 24px rgba(234,88,12,.24); font-size:19px; font-weight:800;
+    }
+    .nav-note { color:var(--muted); font-size:.88rem; }
+    main { padding: 34px 0 76px; }
+    .hero { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr); gap:44px; align-items:center; }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; font-size:.78rem; font-weight:800; letter-spacing:.11em; text-transform:uppercase; color:#9a3412; }
+    .dot { width:8px; height:8px; border-radius:50%; background:#f97316; box-shadow:0 0 0 4px rgba(249,115,22,.14); }
+    h1 { margin:18px 0 16px; max-width:700px; font-size:clamp(2.45rem, 5vw, 4.4rem); line-height:1.02; letter-spacing:-.065em; font-weight:790; }
+    .gradient-text { color:var(--accent); }
+    .lede { max-width:610px; color:var(--muted); font-size:clamp(1rem, 1.7vw, 1.16rem); }
+    .hero-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:28px; }
+    .pill { display:inline-flex; align-items:center; gap:9px; padding:10px 14px; border:1px solid var(--border); border-radius:999px; background:rgba(255,255,255,.72); color:#354057; font-size:.89rem; }
+    .pill svg { width:17px; height:17px; color:var(--teal); }
+    .preview-card { position:relative; overflow:hidden; padding:24px; border:1px solid rgba(255,255,255,.85); border-radius:28px; background:var(--surface); box-shadow:var(--shadow); backdrop-filter:blur(16px); }
+    .preview-card::before { content:""; position:absolute; top:-60px; right:-40px; width:160px; height:160px; border-radius:50%; background:rgba(249,115,22,.10); filter:blur(2px); }
+    .preview-top { position:relative; display:flex; align-items:center; gap:12px; padding-bottom:19px; border-bottom:1px solid var(--border); }
+    .doc-icon { display:grid; place-items:center; width:44px; height:44px; background:#fff1e8; color:#c2410c; border-radius:14px; font-size:22px; }
+    .preview-top strong { display:block; letter-spacing:-.02em; }
+    .preview-top small { display:block; margin-top:2px; color:var(--muted); }
+    .tiny-status { margin-left:auto; align-self:flex-start; width:9px; height:9px; border-radius:100%; background:#f59e0b; box-shadow:0 0 0 4px rgba(245,158,11,.12); }
+    .question-label { margin:21px 0 10px; color:var(--muted); font-size:.8rem; font-weight:750; letter-spacing:.06em; text-transform:uppercase; }
+    .example { margin-top:9px; padding:13px 14px; border:1px solid var(--border); border-radius:13px; background:var(--surface-strong); font-size:.91rem; color:#303a4d; }
+    .example span { color:var(--accent); margin-right:8px; font-weight:800; }
+    .tip { display:flex; gap:11px; padding:15px 17px; margin-top:22px; border-radius:14px; color:#48546a; background:#f0fdfa; border:1px solid #ccfbf1; font-size:.86rem; }
+    .tip-icon { color:var(--teal); font-weight:900; }
+    .section-head { display:flex; align-items:end; justify-content:space-between; gap:20px; margin:64px 0 19px; }
+    .section-head h2 { margin:0; font-size:1.52rem; letter-spacing:-.04em; }
+    .section-head p { margin:0; color:var(--muted); font-size:.92rem; }
+    .feature-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; }
+    .feature { padding:20px; border:1px solid var(--border); border-radius:19px; background:rgba(255,255,255,.72); }
+    .feature-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:12px; background:#fff1e8; color:#c2410c; font-weight:800; margin-bottom:15px; }
+    .feature h3 { margin:0 0 7px; font-size:1rem; letter-spacing:-.02em; }
+    .feature p { margin:0; color:var(--muted); font-size:.89rem; }
+    .setup-box { display:none; margin-top:34px; padding:20px; border:1px solid #fed7aa; border-radius:18px; background:#fff7ed; color:#7c2d12; }
+    .setup-box.visible { display:block; }
+    .setup-box strong { display:block; margin-bottom:5px; }
+    .setup-box p { margin:5px 0; font-size:.91rem; }
+    code { padding:2px 5px; border-radius:5px; background:rgba(124,45,18,.08); font-size:.88em; overflow-wrap:anywhere; }
+    .setup-ok { display:none; margin-top:26px; padding:12px 15px; border:1px solid #a7f3d0; border-radius:14px; background:#ecfdf5; color:#065f46; font-size:.9rem; }
+    .setup-ok.visible { display:block; }
+    footer { padding:22px 0 36px; border-top:1px solid var(--border); color:var(--muted); font-size:.82rem; }
+    .footer-inner { display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; }
+    .footer-links { display:flex; gap:16px; flex-wrap:wrap; }
+    .footer-links a { text-decoration:none; }
+    .footer-links a:hover { text-decoration:underline; }
+    @media (max-width:760px) {
+      .hero { grid-template-columns:1fr; gap:26px; }
+      .preview-card { max-width:620px; }
+      .feature-grid { grid-template-columns:1fr; }
+      .section-head { align-items:start; flex-direction:column; margin-top:45px; }
+      .nav-note { display:none; }
+      main { padding-top:19px; }
+    }
+    @media (prefers-reduced-motion:no-preference) {
+      .preview-card { animation:rise .55s ease-out both; }
+      @keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell nav">
+      <div class="brand"><div class="brand-mark" aria-hidden="true">D</div><span>Docu<span class="gradient-text">Chat</span></span></div>
+      <div class="nav-note">Protótipo • Cloudflare AI Search</div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <div class="eyebrow"><span class="dot" aria-hidden="true"></span> Assistente experimental</div>
+        <h1 id="page-title">Converse com seus <span class="gradient-text">documentos.</span></h1>
+        <p class="lede">Faça perguntas em linguagem natural e encontre informações nos PDFs e nas planilhas da base de conhecimento. Esta página estática serve como ambiente de teste para o Cloudflare AI Search.</p>
+        <div class="hero-actions">
+          <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 7.8 7.5 9.5 4.3-1.7 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.5 12 2.3 2.3 4.8-5"/></svg> Respostas baseadas nos arquivos indexados</span>
+          <span class="pill">Hospedagem estática</span>
+        </div>
+        <div id="setup-ok" class="setup-ok" role="status">O identificador do endpoint foi preenchido no arquivo. Confirme que a origem do GitHub Pages está autorizada no painel da Cloudflare.</div>
+        <div id="setup-box" class="setup-box" role="status">
+          <strong>Falta conectar sua instância da Cloudflare</strong>
+          <p>Abra o arquivo <code>index.html</code> e substitua <code>COLE_SEU_ID_AQUI</code> pelo identificador do Public Endpoint da sua instância de AI Search.</p>
+          <p>Depois, autorize a origem do site em <em>AI Search → sua instância → Settings → Public Endpoint → Authorized hosts</em> e publique novamente.</p>
+        </div>
+      </div>
+
+      <aside class="preview-card" aria-label="Exemplos de perguntas">
+        <div class="preview-top">
+          <div class="doc-icon" aria-hidden="true">✳</div>
+          <div><strong>Assistente documental</strong><small>PDFs, planilhas e relatórios</small></div>
+          <span class="tiny-status" aria-label="Aguardando configuração do endpoint"></span>
+        </div>
+        <div class="question-label">Perguntas para experimentar</div>
+        <div class="example"><span>↗</span>Qual é a principal conclusão deste relatório?</div>
+        <div class="example"><span>↗</span>Em qual documento aparece o indicador que procuro?</div>
+        <div class="example"><span>↗</span>Compare os valores informados nas duas fontes.</div>
+        <div class="tip"><span class="tip-icon" aria-hidden="true">i</span><div>Abra a bolha de chat no canto inferior direito para começar. Confira valores e referências nas fontes originais, especialmente quando a pergunta exigir cálculos.</div></div>
+      </aside>
+    </section>
+
+    <section aria-labelledby="how-title">
+      <div class="section-head">
+        <h2 id="how-title">Um jeito simples de explorar a base</h2>
+        <p>Este protótipo não requer um processo de build.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature"><div class="feature-icon" aria-hidden="true">01</div><h3>Pergunte naturalmente</h3><p>Escreva a dúvida como escreveria para um colega. Comece por perguntas com resposta conhecida para validar o sistema.</p></article>
+        <article class="feature"><div class="feature-icon" aria-hidden="true">02</div><h3>Peça a fonte</h3><p>Solicite o nome do arquivo e, quando disponível, a página, seção ou aba que sustenta a resposta.</p></article>
+        <article class="feature"><div class="feature-icon" aria-hidden="true">03</div><h3>Valide os números</h3><p>Buscas em planilhas ajudam a localizar dados, mas somas, médias e comparações extensas devem ser conferidas.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-inner">
+      <span>Protótipo de demonstração — não envie dados confidenciais.</span>
+      <div class="footer-links"><a href="https://developers.cloudflare.com/ai-search/" target="_blank" rel="noopener noreferrer">Documentação Cloudflare</a><a href="https://docs.github.com/pages" target="_blank" rel="noopener noreferrer">GitHub Pages</a></div>
+    </div>
+  </footer>
+
+  <script>
+    // CONFIGURAÇÃO: substitua apenas este valor pelo ID do Public Endpoint.
+    // Exemplo de endpoint: https://abc123.search.ai.cloudflare.com/
+    const PUBLIC_ENDPOINT_ID = "https://09df22c9-2a26-4f4b-9d50-9c6189720f50.search.ai.cloudflare.com/chat/completions";
+
+    const isConfigured = PUBLIC_ENDPOINT_ID &&
+      PUBLIC_ENDPOINT_ID !== "COLE_SEU_ID_AQUI" &&
+      /^[a-zA-Z0-9-]+$/.test(PUBLIC_ENDPOINT_ID);
+
+    const setupBox = document.getElementById("setup-box");
+    const setupOk = document.getElementById("setup-ok");
+
+    if (!isConfigured) {
+      setupBox.classList.add("visible");
+    } else {
+      setupOk.classList.add("visible");
+      const endpointUrl = `https://${PUBLIC_ENDPOINT_ID}.search.ai.cloudflare.com/`;
+
+      const widgetScript = document.createElement("script");
+      widgetScript.type = "module";
+      widgetScript.src = `${endpointUrl}assets/v0.0.25/search-snippet.es.js`;
+      widgetScript.onerror = () => {
+        setupOk.textContent = "Não foi possível carregar o componente do chat. Confira o ID do endpoint e a conexão com a Cloudflare.";
+        setupOk.style.background = "#fff7ed";
+        setupOk.style.color = "#9a3412";
+        setupOk.style.borderColor = "#fed7aa";
+      };
+      document.head.appendChild(widgetScript);
+
+      const chat = document.createElement("chat-bubble-snippet");
+      chat.setAttribute("api-url", endpointUrl);
+      chat.setAttribute("theme", "auto");
+      chat.style.setProperty("--search-snippet-primary-color", "#ea580c");
+      document.body.appendChild(chat);
+    }
+  </script>
+</body>
+</html>
